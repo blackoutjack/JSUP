@@ -1,48 +1,59 @@
+#
+#
+#
+
+# Class used to create Lexer and Parser classes from grammar files.
 ANTLR = org.antlr.Tool
-GRAMMAR_FILE = JavaScript.g
-LEXER = JavaScriptLexer
-PARSER = JavaScriptParser
-AST = JSUPTree
-PATCH_GRAMMAR = JSUPPatch.g
-EXCEPTIONS = MalformedRuleException
-HANDLER = PatchHandler
+
+# General JSUP components to be compiled.
+GENERAL = JSUPTree PatchHandler SourceSnippet MalformedRuleException ScriptStripAST
+MAIN = JSUP
+
+# Subclasses of PatchHandler to be compiled.
 HANDLERS = FunctionCallTranslation ReplaceID RemoveArguments AlterArguments
-HDLDIR = handlers
+
+# JavaScript grammar.
+JS_GRAMMAR = JavaScript.g
+JS_LEXER = $(JS_GRAMMAR:.g=Lexer)
+JS_PARSER = $(JS_GRAMMAR:.g=Parser)
+
+# Grammar the extracts JavaScript snippets from HTML.
 HTML_LEXER = ScriptStripLexer
 HTML_PARSER = ScriptStripParser
-HTML_AST = ScriptStripAST
-SNIPPET = SourceSnippet
-MAIN = JSUP
+
+# Grammar to parse patch files.
+PATCH_GRAMMAR = JSUPPatch.g
 PATCH_LEXER = $(PATCH_GRAMMAR:.g=Lexer)
 PATCH_PARSER = $(PATCH_GRAMMAR:.g=Parser)
 
-PACKAGE = com.richjoiner.jsup
+# Package and directory tree layout.
+PACKAGE = com.blackoutjack.jsup
 PKGDIR = $(subst .,/,$(PACKAGE))
-GRMDIR = grammars
 SRCDIR = src
 BINDIR = bin
+HDLDIR = handlers
+GRMDIR = grammars
 GRMPATH = $(PKGDIR)/$(GRMDIR)
 
-GRAMMAR_COMPONENTS = $(LEXER) $(PARSER) $(PATCH_LEXER) $(PATCH_PARSER) $(HTML_LEXER) $(HTML_PARSER)
-GENERAL_COMPONENTS = $(EXCEPTIONS) $(AST) $(HANDLER) $(HTML_AST) $(SNIPPET)
-COMPONENTS = $(addprefix $(GRMDIR)/,$(GRAMMAR_COMPONENTS)) $(GENERAL_COMPONENTS) $(addprefix $(HDLDIR)/,$(HANDLERS))
+# Create lists of all required .java and .class files for the project.
+GRAMMAR_COMPONENTS = $(JS_LEXER) $(JS_PARSER) $(PATCH_LEXER) $(PATCH_PARSER) $(HTML_LEXER) $(HTML_PARSER)
+COMPONENTS = $(addprefix $(GRMDIR)/,$(GRAMMAR_COMPONENTS)) $(GENERAL) $(addprefix $(HDLDIR)/,$(HANDLERS)) $(MAIN)
 COMPONENTS_JAVA = $(COMPONENTS:=.java)
 COMPONENTS_SRC = $(addprefix $(SRCDIR)/$(PKGDIR)/,$(COMPONENTS_JAVA))
 COMPONENTS_CLASS = $(COMPONENTS:=.class)
 COMPONENTS_BIN = $(addprefix $(BINDIR)/$(PKGDIR)/,$(COMPONENTS_CLASS))
 
+# Use file extension rules when possible.
 .SUFFIXES: .g .java .class
-.PRECIOUS: %.java
 
-all: $(COMPONENTS_SRC) $(COMPONENTS_BIN) $(BINDIR)/$(PKGDIR)/$(MAIN).class
+# Uncomment to retain intermediate .java files.
+#.PRECIOUS: %.java
 
-test:
-	echo "$(SRCDIR)/$(GRMPATH)/$(LEXER).java: $(SRCDIR)/$(GRMPATH)/$(GRAMMAR_FILE)"
-echo "grm: $(SRCDIR)/$(GRMPATH)/$(LEXER).java"
+
+all: $(COMPONENTS_SRC) $(COMPONENTS_BIN)
 
 clean:
 	rm -rf $(BINDIR)/* *.tokens $(SRCDIR)/$(PKGDIR)/$(GRMDIR)/*.java 
-
 
 $(SRCDIR)/$(GRMPATH)/$(PATCH_LEXER).java: $(SRCDIR)/$(GRMPATH)/$(PATCH_GRAMMAR)
 	java $(ANTLR) $^
@@ -50,10 +61,10 @@ $(SRCDIR)/$(GRMPATH)/$(PATCH_LEXER).java: $(SRCDIR)/$(GRMPATH)/$(PATCH_GRAMMAR)
 $(SRCDIR)/$(GRMPATH)/$(PATCH_PARSER).java: $(SRCDIR)/$(GRMPATH)/$(PATCH_GRAMMAR)
 	java $(ANTLR) $^
 
-$(SRCDIR)/$(GRMPATH)/$(LEXER).java: $(SRCDIR)/$(GRMPATH)/$(GRAMMAR_FILE)
+$(SRCDIR)/$(GRMPATH)/$(JS_LEXER).java: $(SRCDIR)/$(GRMPATH)/$(JS_GRAMMAR)
 	java $(ANTLR) $^
 	
-$(SRCDIR)/$(GRMPATH)/$(PARSER).java: $(SRCDIR)/$(GRMPATH)/$(GRAMMAR_FILE)
+$(SRCDIR)/$(GRMPATH)/$(JS_PARSER).java: $(SRCDIR)/$(GRMPATH)/$(JS_GRAMMAR)
 	java $(ANTLR) $^
 
 $(BINDIR)/$(PKGDIR)/JSUPTree.class:
@@ -62,7 +73,7 @@ $(BINDIR)/$(PKGDIR)/JSUPTree.class:
 .g.java:
 	java $(ANTLR) $<
 
-%.class:
+%.class: $(subst $(BINDIR),$(SRCDIR),$(@D))
 	@if [[ ! -d $(subst $(SRCDIR),$(BINDIR),$(@D)) ]]; then \
 		mkdir -p $(subst $(SRCDIR),$(BINDIR),$(@D)); \
 	fi

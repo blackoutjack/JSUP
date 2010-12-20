@@ -1,2 +1,18 @@
 JSUP - JavaScript Updater
 
+This project depends on ANTLR v3. It can be obtained as a single .jar file from http://www.antlr.org/download.html. Download the file antlr-3.x-complete.jar. As of 12/19/2010, the direct URL for this file is http://www.antlr.org/download/antlr-3.3-complete.jar. (ANTLRWorks is not needed.)
+
+Add the .jar file to your Java classpath. To do this, append the environment variable CLASSPATH with the absolute path for the file. 
+
+Grab the JSUP repository with the following command, replacing [username].
+
+	git clone git@github.com:[username]/JSUP.git ./JSUP
+
+Change directories to ./JSUP and run make.
+
+If successful, the bin/ subdirectory is created containing the compiled .class file tree. You can change directories to bin/ (or alternatively, add the bin/ directory to your classpath) and run the following command to test the installation.
+
+	java com.blackoutjack.jsup.JSUP ../subjects/test.html ../patches/test.jsup
+
+
+	
