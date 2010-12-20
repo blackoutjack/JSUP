@@ -1,5 +1,8 @@
+# 
+# Makefile for the JSUP project.
 #
-#
+# Written by Rich Joiner (rich@richjoiner.com) in collaboration with Raja Bala
+# (meetraja@cs.wisc.edu) under advisory supervision by Professor Ben Liblit.
 #
 
 # Class used to create Lexer and Parser classes from grammar files.
@@ -49,38 +52,40 @@ COMPONENTS_BIN = $(addprefix $(BINDIR)/$(PKGDIR)/,$(COMPONENTS_CLASS))
 # Uncomment to retain intermediate .java files.
 #.PRECIOUS: %.java
 
-
+# Default target. Makes entire JSUP project.
 all: $(COMPONENTS_SRC) $(COMPONENTS_BIN)
 
+# Remove all files produced by compilation.
 clean:
 	rm -rf $(BINDIR)/* *.tokens $(SRCDIR)/$(PKGDIR)/$(GRMDIR)/*.java 
 
+# Rules for lexer/parser components created from a single grammar file.
 $(SRCDIR)/$(GRMPATH)/$(PATCH_LEXER).java: $(SRCDIR)/$(GRMPATH)/$(PATCH_GRAMMAR)
 	java $(ANTLR) $^
-
 $(SRCDIR)/$(GRMPATH)/$(PATCH_PARSER).java: $(SRCDIR)/$(GRMPATH)/$(PATCH_GRAMMAR)
 	java $(ANTLR) $^
-
 $(SRCDIR)/$(GRMPATH)/$(JS_LEXER).java: $(SRCDIR)/$(GRMPATH)/$(JS_GRAMMAR)
 	java $(ANTLR) $^
-	
 $(SRCDIR)/$(GRMPATH)/$(JS_PARSER).java: $(SRCDIR)/$(GRMPATH)/$(JS_GRAMMAR)
 	java $(ANTLR) $^
 
+# Circular dependence between JSUPTree and PatchHandler.
 $(BINDIR)/$(PKGDIR)/JSUPTree.class:
 	javac -d $(BINDIR) -g $(SRCDIR)/$(PKGDIR)/JSUPTree.java $(SRCDIR)/$(PKGDIR)/PatchHandler.java
 
+# General compilation of a .java file from .g file.
 .g.java:
 	java $(ANTLR) $<
 
+# Create .class files in bin/ directory parallel to .java files in src/.
 %.class: $(subst $(BINDIR),$(SRCDIR),$(@D))
 	@if [[ ! -d $(subst $(SRCDIR),$(BINDIR),$(@D)) ]]; then \
 		mkdir -p $(subst $(SRCDIR),$(BINDIR),$(@D)); \
 	fi
 	javac -cp $(BINDIR):$(CLASSPATH) -d $(BINDIR) -g $(subst .class,.java,$(subst $(BINDIR),$(SRCDIR),$@))
 
-.java.class:
-	javac -d $(BINDIR) -g $<
+#.java.class:
+#	javac -d $(BINDIR) -g $<
  
 
 
