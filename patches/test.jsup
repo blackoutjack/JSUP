@@ -1,0 +1,4 @@
+remove_arguments diggit(%1,%2,%3) diggit(%2,%3)
+remove_arguments diggit(%1,%2) diggit(%2)
+replace_id done finally
+#remove_arguments diggit(%1) diggit()

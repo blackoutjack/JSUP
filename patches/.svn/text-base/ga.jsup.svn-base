@@ -1,0 +1,14 @@
+replace_id _getTracker _createTracker
+replace_id _createAsyncTracker _createTracker
+alter_arguments diggit(%1,%2) diggit(%2,%1,false)
+#alter_arguments diggit(%1,%2) diggit(%2,%1)
+replace_id changeMe doneChanged
+# Here's a comment.
+#alter_arguments *.bind(%2,%3) *.pass(%3,%2)
+alter_arguments _trackEvent(%1,%2,%3) _trackEvent(%%,%1,%2,%3)
+#replace_id done finished
+alter_arguments finished() finished(%%,%%,%%)
+alter_arguments parseFloat(%1) parseFloat(%%,%1,%%,%%)
+replace_id x xxx
+replace_id test1 test2
+alter_arguments test2(%1) test2(%1,%%)

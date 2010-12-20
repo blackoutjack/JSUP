@@ -1,0 +1,6 @@
+replace_id $ document.id
+replace_id Fx.Slide Fx.Tween
+alter_arguments *.slideOut() *.slideOut('width',0)
+replace_id *.slideOut *.start
+alter_arguments *.slideIn() *.slideIn('width',1200)
+replace_id *.slideIn *.start
