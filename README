@@ -1,16 +1,21 @@
-JSUP - JavaScript Updater
+JSUP - JavaScript UPdater
 
-This project depends on ANTLR v3. It can be obtained as a single .jar file from http://www.antlr.org/download.html. Download the file antlr-3.x-complete.jar. As of 12/19/2010, the direct URL for this file is http://www.antlr.org/download/antlr-3.3-complete.jar. (ANTLRWorks is not needed.)
+Created by Rich Joiner (rich@richjoiner.com) in collaboration with Raja Bala (meetraja@cs.wisc.edu) under the guidance of Professor Ben Liblit at the Univeristy of Wisconsin-Madison Computer Science department.
 
-Add the .jar file to your Java classpath. To do this, append the environment variable CLASSPATH with the absolute path for the file. 
+=========== GETTING STARTED ============
+The following instructions describe how to checkout the repository and execute an example usage of JSUP.
 
-Grab the JSUP repository with the following command, replacing [username].
+1) This project depends on ANTLR v3. It can be obtained as a single .jar file from http://www.antlr.org/download.html. Download the file antlr-3.x-complete.jar. As of 12/19/2010, the direct URL for this file is http://www.antlr.org/download/antlr-3.3-complete.jar. (ANTLRWorks is not needed.)
+
+2) Add the .jar file to your Java classpath. To do this, append the environment variable CLASSPATH with the absolute path for the file. 
+
+3) Grab the JSUP repository with the following command, replacing [username].
 
 	git clone git@github.com:[username]/JSUP.git ./JSUP
 
-Change directories to ./JSUP and run make.
+4) Change directories to ./JSUP and run make.
 
-If successful, the bin/ subdirectory is created containing the compiled .class file tree. You can change directories to bin/ (or alternatively, add the bin/ directory to your classpath) and run the following command to test the installation.
+5) If successful, the bin/ subdirectory is created containing the compiled .class file tree. You can change directories to bin/ (or alternatively, add the bin/ directory to your classpath) and run the following command to test the installation.
 
 	java com.blackoutjack.jsup.JSUP ../subjects/test.html ../patches/test.jsup
 
