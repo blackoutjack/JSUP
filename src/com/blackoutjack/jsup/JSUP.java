@@ -66,6 +66,7 @@ public class JSUP {
 		snippets = new ArrayList<SourceSnippet>();
     }
 
+	// Create a stream reader for local files or over HTTP.
 	protected BufferedReader initializeReader(String filename) {
 		try {
 			InputStream in;
@@ -87,9 +88,18 @@ public class JSUP {
         readPatches();
 	
         try {
-    		CharStream input = new ANTLRReaderStream(inputReader);
+			// Read whole file in and create JSUPStream which is a subclass
+			// of ANTLRStringStream. toString for ANTLRStringStream is supposed
+			// to emit the text, but it was returning the object id.
+			StringBuilder sb = new StringBuilder();
+			String line;
+			while ((line = inputReader.readLine()) != null) {
+				sb.append(line + "\n");		
+			}
            
-		   
+    		JSUPStream input = new JSUPStream(sb.toString());
+
+		  	// %%% Generalize to other file extensions.
 			if (inputFile.endsWith(".html")) {
                 try {
                     ScriptStripLexer hlex = new ScriptStripLexer(input);
@@ -100,144 +110,86 @@ public class JSUP {
                     CommonTree ast = (CommonTree)result.getTree();
                     //ast.setTokenStream(hcts);
 
+					SourceSnippet last = null;
+					SourceSnippet snip = null;
 					for (int i=0; i<ast.getChildCount(); i++) {
-						SourceSnippet snip = new SourceSnippet();
+						if (snip != null)
+							last = snip;
+							
 						Tree child = ast.getChild(i);
+						snip = new SourceSnippet(child);
 
-						StringBuilder sb = new StringBuilder();
-						for (int j=1; j<child.getChildCount()-1; j++) {
-							Tree grandchild = child.getChild(j);
-							sb.append(grandchild.getText());
-						}
-						snip.setText(sb.toString());
-						snip.openTag = child.getChild(0).getText();
-						snip.closeTag = child.getChild(child.getChildCount()-1).getText();
-						if (sb.toString().trim().equals(""))
-							continue;
-						//System.out.println("SNIPPET: " + sb.toString());
-						snip.setOffsets(child.getLine(), child.getCharPositionInLine());
-						snip.setType(SourceSnippet.JAVASCRIPT);
+						// Hack because I don't know how to get ANTLR
+						// to save the HTML.
+						SourceSnippet priorHTML = getHTMLSnippet(last, snip, input);	
+						snippets.add(priorHTML);					
 						snippets.add(snip);
-						
 					}
-					if (snippets.size() > 0) {
-	                    input = new ANTLRStringStream(snippets.get(0).getText());
+					if (snip != null) {
+						SourceSnippet lastHTML = getHTMLSnippet(snip, null, input);
+						snippets.add(lastHTML);
 					}
+	                    
+					input = new JSUPStream(snippets.get(0).getText());
                 } catch (RecognitionException ex) {
                     ex.printStackTrace();
                 }
-            }
-			// Need the stream outside the loop to print out later.
-			TokenRewriteStream tokens = null;
 
-			// Apply one rule, rerun through the parsing process and repeat.
-			for (PatchHandler handler : handlers) {
-				
-            	JavaScriptLexer lex = new JavaScriptLexer(input);
-	            tokens = new TokenRewriteStream(lex);
-    	        JavaScriptParser parser = new JavaScriptParser(tokens);
-        	    parser.setTreeAdaptor(jsadaptor);
-
-	            try {
-    	            JavaScriptParser.program_return prog = parser.program();
-        	        JSUPTree ast = (JSUPTree)prog.getTree();
-					 // Also saves original text for each subtree.
-					ast.setTokenStream(tokens);
-				
-					// Apply the rule and get the resulting stream.
-                	boolean changed = apply(ast, tokens, handler);
-	                String intermediate = tokens.toString();
-					//if (changed) System.out.println(intermediate);
-
-					// Start the process over for the next rule.
-					input = new ANTLRStringStream(intermediate);
-    	        } catch (RecognitionException ex) {
-        	        ex.printStackTrace();
-				}
-           	}
-			// Output the final product.
-			if (tokens != null && snippets.size() == 0) {
-				System.out.print(tokens.toString());
+			// Not HTML, just JavaScript source code
+            } else {
+				String js_code = input.toString();
+				//System.out.println("code: " + js_code);
+				SourceSnippet js = new SourceSnippet(js_code, SourceSnippet.JAVASCRIPT);
+				snippets.add(js);
 			}
 
-			if (snippets.size() > 0) {
-				snippets.get(0).setText(tokens.toString());
-				for (int i=1; i<snippets.size(); i++) {
-					input = new ANTLRStringStream(snippets.get(i).getText());
-					for (PatchHandler handler : handlers) {
+			for (int i=0; i<snippets.size(); i++) {
+				SourceSnippet snip = snippets.get(i);
+				if (snip.getType() == SourceSnippet.HTML)
+					continue;
+
+				input = new JSUPStream(snip.getText());		
+				TokenRewriteStream tokens = null;
+
+				// Apply one rule, rerun through the parsing process and repeat.
+				for (PatchHandler handler : handlers) {
+				
+					JavaScriptLexer lex = new JavaScriptLexer(input);
+					tokens = new TokenRewriteStream(lex);
+					JavaScriptParser parser = new JavaScriptParser(tokens);
+					parser.setTreeAdaptor(jsadaptor);
+
+					try {
+						JavaScriptParser.program_return prog = parser.program();
+						JSUPTree ast = (JSUPTree)prog.getTree();
 						
-						JavaScriptLexer lex = new JavaScriptLexer(input);
-						tokens = new TokenRewriteStream(lex);
-						JavaScriptParser parser = new JavaScriptParser(tokens);
-						parser.setTreeAdaptor(jsadaptor);
+						// setTokenStream also saves original text for 
+						// each subtree.
+						ast.setTokenStream(tokens);
+					
+						// Apply the rule and get the resulting stream.
+						boolean changed = apply(ast, tokens, handler);
+						String intermediate = tokens.toString();
+						//if (changed) System.out.println(intermediate);
 
-						try {
-							JavaScriptParser.program_return prog = parser.program();
-							JSUPTree ast = (JSUPTree)prog.getTree();
-							 // Also saves original text for each subtree.
-							ast.setTokenStream(tokens);
-						
-							// Apply the rule and get the resulting stream.
-							boolean changed = apply(ast, tokens, handler);
-							String intermediate = tokens.toString();
-							
-							if (changed) {
-								//System.out.println(intermediate);
-							}
-
-							// Start the process over for the next rule.
-							input = new ANTLRStringStream(intermediate);
-						} catch (RecognitionException ex) {
-							ex.printStackTrace();
-						}
-					}
-					// Output the final product.
-					if (tokens != null) {
-						snippets.get(i).setText(tokens.toString());
-						//System.out.print(tokens.toString());
+						// Start the process over for the next rule.
+						input = new JSUPStream(intermediate);
+					} catch (RecognitionException ex) {
+						ex.printStackTrace();
 					}
 				}
+
+				// Save the final product back to the snippet.
+				snip.setText(tokens.toString());
 			}
-
-			if (snippets.size() > 0) {
-				// Read in file
-				int linePointer = 0;
-				int charPointer = 0;
-				int snippetIndex = 0;
-				SourceSnippet snip = snippets.get(0);
-				
-				String line;
-				BufferedReader newReader = initializeReader(inputFile);
-				while ((line = newReader.readLine()) != null) {
-					linePointer++;
-
-					if (snip != null && linePointer == snip.getLineOffset()) {
-						//String[] newLines = snip.getText().split("\n");
-						// Consume original text.
-						for (int i=0; i<snip.getLines(); i++) {
-							line = newReader.readLine();
-							linePointer++;
-						}
-						System.out.print(snip.openTag);
-						System.out.print(snip.getText());
-						System.out.println(snip.closeTag);
-
-						snippetIndex++;
-						if (snippetIndex == snippets.size()) {
-							snip = null;
-						} else {
-							snip = snippets.get(snippetIndex);
-						}
-					} else {
-						System.out.println(line);
-					}
-				}
+			
+			for (int i=0; i<snippets.size(); i++) {
+				SourceSnippet snip = snippets.get(i);
+				System.out.print(snip.toString());
 			}
-
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
-
 		
 	}
 
@@ -311,4 +263,59 @@ public class JSUP {
             }
         }
     }
+	
+	protected SourceSnippet getHTMLSnippet(SourceSnippet prev, SourceSnippet next, ANTLRStringStream input) {
+		int pos = 0;
+		int eof = input.size();
+		input.reset();
+		
+		if (prev != null) {
+			while (true) {
+				input.consume();
+				if (input.getLine() == prev.getLineOffset()) {
+					break;
+				}
+				pos++;
+			}
+			for (int i=0; i<prev.getCharOffset(); i++) {
+				input.consume();
+				pos++;		
+			}
+			for (int i=0; i<prev.toString().length(); i++) {
+				input.consume();
+				pos++;
+			}
+
+		}
+
+		StringBuilder sb = new StringBuilder();
+	
+		if (next != null) {
+			while (true) {
+				char in = (char)input.LT(1);
+				input.consume();
+				sb.append(in);
+				if (input.getLine() == next.getLineOffset()) {
+					break;
+				}
+				pos++;
+			}
+			for (int i=0; i<next.getCharOffset(); i++) {
+				char in = (char)input.LT(1);
+				input.consume();
+				sb.append(in);
+				pos++;
+			}
+		} else {
+			for (; pos<input.size()-1; pos++) {
+				char in = (char)input.LT(1);
+				input.consume();
+				sb.append(in);
+			}
+		}
+
+		SourceSnippet snip = new SourceSnippet(sb.toString(), SourceSnippet.HTML);
+		return snip;
+	}
+
 }

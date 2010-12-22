@@ -9,7 +9,7 @@
 ANTLR = org.antlr.Tool
 
 # General JSUP components to be compiled.
-GENERAL = JSUPTree PatchHandler SourceSnippet MalformedRuleException ScriptStripAST
+GENERAL = JSUPTree PatchHandler SourceSnippet MalformedRuleException ScriptStripAST JSUPStream
 MAIN = JSUP
 
 # Subclasses of PatchHandler to be compiled.
@@ -78,7 +78,7 @@ $(BINDIR)/$(PKGDIR)/JSUPTree.class:
 	java $(ANTLR) $<
 
 # Create .class files in bin/ directory parallel to .java files in src/.
-%.class: $(subst $(BINDIR),$(SRCDIR),$(@D))
+bin/%.class: src/%.java
 	@if [[ ! -d $(subst $(SRCDIR),$(BINDIR),$(@D)) ]]; then \
 		mkdir -p $(subst $(SRCDIR),$(BINDIR),$(@D)); \
 	fi
