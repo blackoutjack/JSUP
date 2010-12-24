@@ -3,4 +3,5 @@ alter_arguments diggit(%1,%2) diggit(%2)
 replace_id done finally
 replace_id changeMe worked
 replace_id x xx
+insert_before y /*mark my words*/
 #remove_arguments diggit(%1) diggit()

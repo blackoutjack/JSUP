@@ -238,7 +238,7 @@ public class JSUP {
 					
 			}
 			
-
+			// Need an automatic plug-in recognition scheme to replace this.
 			try {
 				if (ruleType.equals("replace_id")) {           
 					handler = new ReplaceID(translation);
@@ -246,6 +246,9 @@ public class JSUP {
 					handler = new AlterArguments(translation);
 				} else if (ruleType.equals("remove_arguments")) {
 					handler = new RemoveArguments(translation);
+				} else if (ruleType.equals("insert_before")) {
+					System.out.println("gurg");
+					handler = new InsertBeforeID(translation);
 				}
 			} catch (MalformedRuleException ex) {
 				System.out.println(ex.getMessage());

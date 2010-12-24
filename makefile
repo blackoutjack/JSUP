@@ -13,7 +13,7 @@ GENERAL = JSUPTree PatchHandler SourceSnippet MalformedRuleException ScriptStrip
 MAIN = JSUP
 
 # Subclasses of PatchHandler to be compiled.
-HANDLERS = FunctionCallTranslation ReplaceID RemoveArguments AlterArguments
+HANDLERS = FunctionCallTranslation ReplaceID RemoveArguments AlterArguments InsertBeforeID
 
 # JavaScript grammar.
 JS_GRAMMAR = JavaScript.g

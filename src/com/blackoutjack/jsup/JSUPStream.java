@@ -10,7 +10,6 @@ class JSUPStream extends ANTLRStringStream {
 
 
 	public String toString() {
-		System.out.println("heyho");
 		return new String(data);
 	}
 }
