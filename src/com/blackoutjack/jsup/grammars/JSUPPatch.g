@@ -74,7 +74,7 @@ Comment
     ;
 
 Keyword
-    : ('replace_id' | 'alter_arguments' | 'remove_arguments')
+    : ('replace_id' | 'alter_arguments' | 'remove_arguments' | 'insert_before')
     ;
 
 Identifier

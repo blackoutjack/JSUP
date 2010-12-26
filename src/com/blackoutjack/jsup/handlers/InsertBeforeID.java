@@ -21,12 +21,11 @@ public class InsertBeforeID extends PatchHandler {
 		if (ast.getType() != JavaScriptParser.MEMBERCHAIN && ast.getType() != JavaScriptParser.Identifier) {
             return false;
         }
-		System.out.println("huhu: " + toInsert);
 
         if (checkMemberChain(ast)) {
 			int insertAt = ast.getTokenStartIndex();
 			
-			trs.insertBefore(insertAt, toInsert + "\n");
+			trs.insertBefore(insertAt, toInsert);
             return true;
         }
 
@@ -72,11 +71,20 @@ public class InsertBeforeID extends PatchHandler {
         } 
  
 		// Get the comment to insert.
-		if (tinsert.getType() != JSUPPatchLexer.Comment) {
-			System.out.println("Only comments can be inserted.");
+		if (tinsert.getType() != JSUPPatchLexer.MEMBERCHAIN) {
+			System.err.println("Only comments can be inserted.");
+			return;
+		}		
+		if (tinsert.getChildCount() != 1) {
+			System.err.println("Only single comments can be inserted.");
+		}
+
+		Tree toInsertToken = tinsert.getChild(0);
+		if (toInsertToken.getType() != JSUPPatchLexer.JSComment) {
+			System.err.println("Only comments can be inserted.");
 			return;
 		}
-		
-		toInsert = tinsert.getText();
+
+		toInsert = toInsertToken.getText();
     } 
 }
