@@ -70,7 +70,7 @@ $(SRCDIR)/$(GRMPATH)/$(JS_PARSER).java: $(SRCDIR)/$(GRMPATH)/$(JS_GRAMMAR)
 	java $(ANTLR) $^
 
 # Circular dependence between JSUPTree and PatchHandler.
-$(BINDIR)/$(PKGDIR)/JSUPTree.class:
+$(BINDIR)/$(PKGDIR)/JSUPTree.class: $(SRCDIR)/$(PKGDIR)/JSUPTree.java $(SRCDIR)/$(PKGDIR)/PatchHandler.java
 	javac -d $(BINDIR) -g $(SRCDIR)/$(PKGDIR)/JSUPTree.java $(SRCDIR)/$(PKGDIR)/PatchHandler.java
 
 # General compilation of a .java file from .g file.

@@ -4,23 +4,42 @@ import org.antlr.runtime.*;
 import org.antlr.runtime.tree.*;
 import java.util.*;
 
+/**
+ * Provides functionality designed to facilitate consistent manipulations
+ * to the input token stream when the tree structure is altered.
+ */
 public class JSUPTree extends CommonTree {
+	/**
+	 * Contains all the text from the original input that is internal to this
+	 * (sub)tree.
+	 */
     protected String text;
 
+	/**
+	 * The entire token stream associated with the input.
+	 */
     protected TokenRewriteStream tokenStream;
-    protected ArrayList<PatchHandler> handlers;
 
     public JSUPTree(Token t) {
         super(t);
 		text = (t == null) ? "" : t.getText();
     }
 
-    public JSUPTree(CommonTree ast) {
+	/**
+	 * Recursively adds copies of the children of the original tree to the 
+	 * constructed tree.
+	 */
+    public JSUPTree(JSUPTree ast) {
         super(ast);
-        if (ast.getChildren() != null)
-            this.addChildren(ast.getChildren());
+		for (int i=0; i<ast.getChildCount(); i++) {
+			this.addChild(new JSUPTree(ast.getChild(i)));
+		}
     }
 
+	/**
+	 * Sets the token stream and text for the tree and all of it's children 
+	 * recursively (and therefore should only be called on the top-level tree).
+	 */
     public void setTokenStream(TokenRewriteStream ts) {
         tokenStream = ts;
 		for (int i=0; i<getChildCount(); i++) {
@@ -43,18 +62,11 @@ public class JSUPTree extends CommonTree {
 		return tokenStream;
 	}
 
-    public void setHandlers(ArrayList<PatchHandler> handlers) {
-        this.handlers = handlers;
-    }
-
-    public String toString() {
-        return super.toString();
-    }
-
 	public String getText() {
 		return text;
 	}
 
+	/*
     public void print() {
 		if (getChildCount() == 0) {
 			System.out.print(text);
@@ -65,6 +77,7 @@ public class JSUPTree extends CommonTree {
 			}
 		}
     }
+	*/
 
 	public JSUPTree getChild(int index) {
 		CommonTree child = (CommonTree)super.getChild(index);

@@ -8,7 +8,8 @@ class JSUPStream extends ANTLRStringStream {
 		super(input);
 	}
 
-
+	// ANTLRStringStream is documented to have this behavior, but it wasn't
+	// working as of 2010-12-22.
 	public String toString() {
 		return new String(data);
 	}
